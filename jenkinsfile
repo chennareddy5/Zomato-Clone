@@ -1,31 +1,42 @@
-pipeline {
-  agent any
-  stages {
-    stage('Unit Test') {
-      steps {
-        sh 'mvn clean test'
-      }
+pipeline{
+    agent any
+    tools{
+        jdk 'JDK'
+        nodejs 'NodeJS'
     }
-    stage('Deploy Standalone') {
-      steps {
-        sh 'mvn deploy -P standalone'
-      }
+    environment {
+        SCANNER_HOME=tool 'Sonar-scanner'
     }
-    stage('Deploy AnyPoint') {
-      environment {
-        ANYPOINT_CREDENTIALS = credentials('anypoint.credentials')
-      }
-      steps {
-        sh 'mvn deploy -P arm -Darm.target.name=local-4.0.0-ee -Danypoint.username=${ANYPOINT_CREDENTIALS_USR}  -Danypoint.password=${ANYPOINT_CREDENTIALS_PSW}'
-      }
+    stages {
+        stage('clean workspace'){
+            steps{
+                cleanWs()
+            }
+        }
+        stage('Checkout from Git'){
+            steps{
+                git branch: 'main', url: 'https://github.com/chennareddy5/Zomato-Clone.git'
+            }
+        }
+        stage("Sonarqube Analysis "){
+            steps{
+                withSonarQubeEnv('sonar') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=zomato \
+                    -Dsonar.projectKey=zomato '''
+                }
+            }
+        }
+        stage("quality gate"){
+           steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
+                }
+            } 
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh "npm install"
+            }
+        }
     }
-    stage('Deploy CloudHub') {
-      environment {
-        ANYPOINT_CREDENTIALS = credentials('anypoint.credentials')
-      }
-      steps {
-        sh 'mvn deploy -P cloudhub -Dmule.version=4.0.0 -Danypoint.username=${ANYPOINT_CREDENTIALS_USR} -Danypoint.password=${ANYPOINT_CREDENTIALS_PSW}'
-      }
-    }
-  }
 }

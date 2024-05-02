@@ -6,6 +6,7 @@ pipeline {
     }
     environment {
         SCANNER_HOME = tool 'Sonar-scanner'
+        TRIVY_HOME = '/home/ubuntu/snap/trivy'
     }
     stages {
         stage('clean workspace') {
@@ -21,10 +22,10 @@ pipeline {
         stage("Sonarqube Analysis ") {
             steps {
                 withSonarQubeEnv('sonar') {
-                    sh ''' 
-                    $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=zomato \
+                    sh """ 
+                    ${SCANNER_HOME}/bin/sonar-scanner -Dsonar.projectName=zomato \
                     -Dsonar.projectKey=zomato 
-                    '''
+                    """
                 }
             }
         }
@@ -48,7 +49,7 @@ pipeline {
         }
         stage('TRIVY FS SCAN') {
             steps {
-                sh "trivy fs /full/path/to/directory > trivyfs.txt"
+                sh "${TRIVY_HOME} fs /full/path/to/directory > trivyfs.txt"
             }
         }
     }

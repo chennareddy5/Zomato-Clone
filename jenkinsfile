@@ -47,7 +47,9 @@ pipeline {
             }
         }
         stage('TRIVY FS SCAN') {
-    steps {
-        sh "trivy fs /full/path/to/directory > trivyfs.txt"
+            steps {
+                sh "trivy fs /full/path/to/directory > trivyfs.txt"
+            }
+        }
     }
 }

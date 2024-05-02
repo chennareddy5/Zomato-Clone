@@ -6,7 +6,6 @@ pipeline {
     }
     environment {
         SCANNER_HOME = tool 'Sonar-scanner'
-        TRIVY_HOME = '/home/ubuntu/snap/trivy'
     }
     stages {
         stage('clean workspace') {
@@ -41,15 +40,16 @@ pipeline {
                 sh "npm install"
             }
         }
+       
         stage('OWASP FS SCAN') {
             steps {
-                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'OSWAP'
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
         stage('TRIVY FS SCAN') {
             steps {
-                sh "${TRIVY_HOME} fs /full/path/to/directory > trivyfs.txt"
+                sh "trivy fs . > trivyfs.txt"
             }
         }
     }
